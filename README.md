@@ -107,6 +107,15 @@ docker run --rm -p 8080:8080 \
   openforge
 ```
 
+Prebuilt multi-arch images (`linux/amd64`, `linux/arm64`) are published to
+GitHub Container Registry by [`.github/workflows/container.yml`](.github/workflows/container.yml):
+
+```bash
+docker run --rm -p 8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  ghcr.io/22p/openforge:latest
+```
+
 ## Architecture
 
 ```
