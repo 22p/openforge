@@ -357,22 +357,25 @@ hr {
 .card-body + .card-body { border-top: 1px solid var(--border); }
 
 /* --- hero ----------------------------------------------------------------- */
-.hero { padding: var(--sp-10) 0 var(--sp-8); }
+.hero { padding: var(--sp-12) 0 var(--sp-8); text-align: center; }
 .hero h1 {
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: clamp(30px, 4.6vw, 46px);
   letter-spacing: -0.03em;
-  max-width: 20ch;
+  margin: 0 auto;
+  text-wrap: balance;
 }
 .hero .lead {
-  margin-top: var(--sp-3);
+  margin: var(--sp-3) auto 0;
   color: var(--text-muted);
-  font-size: 16px;
-  max-width: 62ch;
+  font-size: 16.5px;
+  max-width: 74ch;
+  text-wrap: balance;
 }
 .hero-meta {
   margin-top: var(--sp-5);
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: var(--sp-2);
 }
 

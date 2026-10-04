@@ -10,7 +10,7 @@
       "nav.api": "API",
       "theme.toggle": "Toggle theme",
 
-      "hero.title": "Build OpenWrt firmware in your browser",
+      "hero.title": "Custom OpenWrt firmware, built for your device",
       "hero.lead": "Pick a release and device, customize the package set, then download a ready-to-flash image. Powered by the Attended Sysupgrade API.",
       "hero.server": "Server",
       "hero.builder": "Builder",
@@ -112,7 +112,7 @@
       "nav.api": "API",
       "theme.toggle": "切换主题",
 
-      "hero.title": "在浏览器中编译 OpenWrt 固件",
+      "hero.title": "为你的设备定制 OpenWrt 固件",
       "hero.lead": "选择版本与设备，定制软件包，然后下载可直接刷写的镜像。基于 Attended Sysupgrade API。",
       "hero.server": "服务端",
       "hero.builder": "编译后端",
