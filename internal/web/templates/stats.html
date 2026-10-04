@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ .SiteName }} · Statistics</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var t = params.get("theme");
+          if (t !== "light" && t !== "dark") t = localStorage.getItem("openforge.theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/">
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="29" height="29" rx="8" stroke="currentColor" stroke-width="2" />
+            <path d="M16 6.5l7 7h-4.25v6.25h-5.5V13.5H9l7-7z" fill="currentColor" />
+            <rect x="9" y="22.5" width="14" height="2.5" rx="1.25" fill="currentColor" />
+          </svg>
+          <span>{{ .SiteName }}</span>
+          <span class="brand-sub" data-i18n="brand.sub">Firmware Builder</span>
+        </a>
+        <nav class="site-nav">
+          <a href="/" data-i18n="nav.builder">Builder</a>
+          <a href="/stats" class="active" data-i18n="nav.stats">Statistics</a>
+          <a href="/#api" data-i18n="nav.api">API</a>
+        </nav>
+        <div class="header-actions">
+          <div class="segmented" data-lang-switch role="group" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="zh">中文</button>
+          </div>
+          <button
+            class="btn btn-icon"
+            type="button"
+            data-theme-toggle
+            data-i18n-title="theme.toggle"
+            aria-label="Toggle theme"
+          ></button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container" style="padding-bottom: 24px">
+        <h1 data-i18n="stats.title">Statistics</h1>
+        <p class="lead" data-i18n="stats.lead">
+          Build activity reported by the connected ASU backend.
+        </p>
+      </section>
+
+      <div class="container stack" style="padding-bottom: 56px">
+        <div class="stat-grid">
+          <div class="card stat">
+            <div class="stat-label" data-i18n="stats.queue">Queue length</div>
+            <div class="stat-value" id="stat-queue">—</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label" data-i18n="stats.builds24h">Builds (24h)</div>
+            <div class="stat-value" id="stat-builds24h">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 data-i18n="stats.perDay">Builds per day</h3></div>
+          <div class="card-body">
+            <canvas class="chart" id="chart-per-day"></canvas>
+            <div class="row wrap" id="legend-per-day" style="margin-top: 12px; gap: 16px"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 data-i18n="stats.byVersion">Builds by version</h3></div>
+          <div class="card-body">
+            <div class="bar-list" id="bars-by-version"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 data-i18n="stats.topPackages">Top packages</h3></div>
+          <div class="card-body">
+            <div class="bar-list" id="bars-top-packages"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 data-i18n="stats.errors">Recent build errors</h3></div>
+          <div class="card-body">
+            <pre
+              class="mono"
+              id="build-errors"
+              style="margin: 0; white-space: pre-wrap; font-size: 12.5px; color: var(--text-muted); max-height: 320px; overflow: auto"
+              >Loading…</pre
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>{{ .SiteName }} · v{{ .Version }} · © {{ .Year }}</span>
+        <div class="footer-links">
+          <a href="/json/v1/overview.json" data-i18n="footer.overview">Server overview</a>
+          <a href="/" data-i18n="nav.builder">Builder</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/stats.js"></script>
+  </body>
+</html>

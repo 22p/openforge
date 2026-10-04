@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ .SiteName }} · OpenWrt Firmware Builder</title>
+    <meta
+      name="description"
+      content="Build custom OpenWrt firmware images in your browser. Attended Sysupgrade compatible."
+    />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <script>
+      (function () {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var t = params.get("theme");
+          if (t !== "light" && t !== "dark") t = localStorage.getItem("openforge.theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body
+    data-allow-defaults="{{ .AllowDefaults }}"
+    data-backend-configured="{{ .BackendConfigured }}"
+  >
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/">
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="29" height="29" rx="8" stroke="currentColor" stroke-width="2" />
+            <path d="M16 6.5l7 7h-4.25v6.25h-5.5V13.5H9l7-7z" fill="currentColor" />
+            <rect x="9" y="22.5" width="14" height="2.5" rx="1.25" fill="currentColor" />
+          </svg>
+          <span>{{ .SiteName }}</span>
+          <span class="brand-sub" data-i18n="brand.sub">Firmware Builder</span>
+        </a>
+        <nav class="site-nav">
+          <a href="/" class="{{ if eq .Active "/" }}active{{ end }}" data-i18n="nav.builder">Builder</a>
+          {{ if .ServerStats }}
+          <a href="/stats" class="{{ if eq .Active "/stats" }}active{{ end }}" data-i18n="nav.stats">Statistics</a>
+          {{ end }}
+          <a href="#api" data-i18n="nav.api">API</a>
+        </nav>
+        <div class="header-actions">
+          <div class="segmented" data-lang-switch role="group" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="zh">中文</button>
+          </div>
+          <button
+            class="btn btn-icon"
+            type="button"
+            data-theme-toggle
+            data-i18n-title="theme.toggle"
+            aria-label="Toggle theme"
+          ></button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero container">
+        <h1 data-i18n="hero.title">Build OpenWrt firmware in your browser</h1>
+        <p class="lead" data-i18n="hero.lead">
+          Pick a release and device, customize the package set, then download a ready-to-flash
+          image. Powered by the Attended Sysupgrade API.
+        </p>
+        <div class="hero-meta">
+          <span class="badge"
+            ><span class="faint" data-i18n="hero.server">Server</span>&nbsp;v{{ .Version }}</span
+          >
+          <span class="badge" id="badge-builder"
+            ><span class="dot" style="background: var(--warning)"></span
+            ><span data-i18n="hero.builder">Builder</span>&nbsp;<span
+              id="builder-state"
+              data-i18n="hero.offline"
+              >unconfigured</span
+            ></span
+          >
+          <span class="badge hidden" id="badge-queue"
+            ><span class="faint" data-i18n="hero.queue">Queue</span>&nbsp;<span id="queue-value">0</span></span
+          >
+          <a class="badge badge-accent" href="#api" data-i18n="hero.docs">Read the API</a>
+        </div>
+      </section>
+
+      <div class="container builder">
+        <div class="builder-main stack">
+          <!-- Step 1: Release -->
+          <section class="card step" id="step-release">
+            <div class="step-head">
+              <span class="step-index">1</span>
+              <div class="grow">
+                <h2 data-i18n="step.release.title">Release</h2>
+                <div class="step-desc" data-i18n="step.release.desc">
+                  Choose the OpenWrt version to build.
+                </div>
+              </div>
+            </div>
+            <div class="step-body">
+              <div class="field">
+                <span class="label" data-i18n="field.branch">Branch</span>
+                <div class="chip-row" id="branch-chips"></div>
+              </div>
+              <div class="field">
+                <label class="label" for="version-select" data-i18n="field.version">Version</label>
+                <select class="select" id="version-select"></select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 2: Device -->
+          <section class="card step is-disabled" id="step-device">
+            <div class="step-head">
+              <span class="step-index">2</span>
+              <div class="grow">
+                <h2 data-i18n="step.device.title">Device</h2>
+                <div class="step-desc" data-i18n="step.device.desc">
+                  Pick a target and your exact device model.
+                </div>
+              </div>
+            </div>
+            <div class="step-body">
+              <div class="field">
+                <label class="label" for="target-select" data-i18n="field.target">Target</label>
+                <select class="select" id="target-select"></select>
+              </div>
+              <div class="field">
+                <label class="label" for="device-input" data-i18n="field.device">Device</label>
+                <div class="combo">
+                  <input
+                    class="input"
+                    id="device-input"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    data-i18n-placeholder="field.device.placeholder"
+                    placeholder="Search your device model…"
+                  />
+                  <div class="combo-list" id="device-list" hidden></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 3: Packages -->
+          <section class="card step is-disabled" id="step-packages">
+            <div class="step-head">
+              <span class="step-index">3</span>
+              <div class="grow">
+                <h2 data-i18n="step.packages.title">Packages</h2>
+                <div class="step-desc" data-i18n="step.packages.desc">
+                  Add or replace packages included in the image.
+                </div>
+              </div>
+            </div>
+            <div class="step-body">
+              <div class="row-between" style="margin-bottom: 6px">
+                <span class="label" data-i18n="field.packages.default">Default packages</span>
+                <span class="hint" id="default-count">—</span>
+              </div>
+              <div class="combo">
+                <div class="tags" id="tags">
+                  <input
+                    id="package-input"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    data-i18n-placeholder="field.packages.placeholder"
+                    placeholder="Type a package name and press Enter"
+                  />
+                </div>
+                <div class="combo-list" id="package-list" hidden></div>
+              </div>
+              <label class="checkbox" style="margin-top: 12px">
+                <input type="checkbox" id="diff-packages" checked />
+                <span data-i18n="field.diff">Send the package list as-is (absolute list)</span>
+              </label>
+              <p class="hint" style="margin-top: 4px" data-i18n="field.diff.hint">
+                When enabled the list above replaces the default package set. Disable it to treat the
+                list as extra packages on top of the defaults.
+              </p>
+            </div>
+          </section>
+
+          <!-- Step 4: Advanced -->
+          <section class="card step" id="step-advanced">
+            <div class="step-head">
+              <span class="step-index">4</span>
+              <div class="grow">
+                <h2 data-i18n="step.advanced.title">Advanced options</h2>
+                <div class="step-desc" data-i18n="step.advanced.desc">
+                  Root filesystem, image format and first-boot script.
+                </div>
+              </div>
+              <button class="btn btn-sm btn-ghost" type="button" id="advanced-toggle">+</button>
+            </div>
+            <div class="step-body hidden" id="advanced-body">
+              <div class="field-row">
+                <div class="field" style="flex: 1 1 200px">
+                  <label class="label" for="rootfs-size" data-i18n="field.rootfs"
+                    >Root filesystem size (MB)</label
+                  >
+                  <input
+                    class="input"
+                    id="rootfs-size"
+                    type="number"
+                    min="1"
+                    max="{{ .MaxRootfsSizeMB }}"
+                    inputmode="numeric"
+                  />
+                  <span class="hint" data-i18n="field.rootfs.hint" data-i18n-max="{{ .MaxRootfsSizeMB }}"
+                    >Leave empty to use the ImageBuilder default. Maximum {{ .MaxRootfsSizeMB }} MB.</span
+                  >
+                </div>
+                <div class="field" style="flex: 1 1 200px">
+                  <label class="label" for="filesystem" data-i18n="field.filesystem"
+                    >Image filesystem</label
+                  >
+                  <select class="select" id="filesystem">
+                    <option value="" data-i18n="field.filesystem.auto">ImageBuilder default</option>
+                    <option value="squashfs">squashfs</option>
+                    <option value="ext4">ext4</option>
+                    <option value="ubifs">ubifs</option>
+                    <option value="erofs">erofs</option>
+                    <option value="jffs2">jffs2</option>
+                    <option value="jffs2-nand">jffs2-nand</option>
+                    <option value="targz">targz</option>
+                    <option value="cpiogz">cpiogz</option>
+                  </select>
+                </div>
+              </div>
+
+              {{ if .AllowDefaults }}
+              <div class="field">
+                <label class="label" for="defaults" data-i18n="field.defaults"
+                  >First-boot script (UCI defaults)</label
+                >
+                <textarea
+                  class="textarea"
+                  id="defaults"
+                  spellcheck="false"
+                  placeholder='echo "Hello world"&#10;wifi restart'
+                ></textarea>
+                <span class="hint" data-i18n="field.defaults.hint" data-i18n-max="{{ .MaxDefaultsLength }}"
+                  >Maximum {{ .MaxDefaultsLength }} bytes. Executed on the device's first boot.</span
+                >
+              </div>
+              {{ end }}
+
+              <div class="field">
+                <span class="label" data-i18n="field.repositories">Custom repositories</span>
+                <div id="repos" class="stack"></div>
+                <div>
+                  <button class="btn btn-sm" type="button" id="add-repo" data-i18n="field.repo.add">
+                    Add repository
+                  </button>
+                </div>
+                <label class="label" for="repo-keys" style="margin-top: 6px" data-i18n="field.repo.keys"
+                  >Signing keys (optional)</label
+                >
+                <textarea
+                  class="textarea"
+                  id="repo-keys"
+                  spellcheck="false"
+                  style="min-height: 76px"
+                  placeholder="-----BEGIN PUBLIC KEY-----&#10;…&#10;-----END PUBLIC KEY-----"
+                ></textarea>
+                <span class="hint" data-i18n="field.repositories.hint"
+                  >Only repositories whose URL prefix is on the server allow-list are accepted.</span
+                >
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="builder-side">
+          <div class="card">
+            <div class="card-header">
+              <h3 data-i18n="summary.title">Build summary</h3>
+            </div>
+            <div class="card-body">
+              <p class="muted" id="summary-empty" data-i18n="summary.empty">
+                Select a device to begin.
+              </p>
+              <div class="summary-list hidden" id="summary"></div>
+            </div>
+            <div class="card-body stack">
+              <button class="btn btn-primary btn-block" type="button" id="build-btn" disabled>
+                <span data-i18n="build.button">Build firmware</span>
+              </button>
+              <div class="status-line hidden" id="build-status">
+                <span class="spinner"></span><span id="build-status-text"></span>
+              </div>
+              <div class="progress hidden" id="progress-wrap">
+                <div class="progress-bar" id="progress-bar"></div>
+              </div>
+            </div>
+            <div class="card-body hidden" id="result-area"></div>
+          </div>
+          <p class="hint" style="margin-top: 12px" data-i18n="progress.hint">
+            A custom image usually takes a few minutes to build.
+          </p>
+        </aside>
+      </div>
+
+      <section class="container" id="api" style="padding-bottom: 56px">
+        <div class="card">
+          <div class="card-header">
+            <h2 data-i18n="api.title">API</h2>
+          </div>
+          <div class="card-body stack">
+            <p class="muted" data-i18n="api.lead">
+              OpenForge speaks the Attended Sysupgrade API. Point owut, LuCI or the OpenWrt
+              firmware selector at this server.
+            </p>
+            <div class="summary-list">
+              <div class="summary-item">
+                <span class="mono">GET /json/v1/overview.json</span>
+                <span class="v muted">branches, versions, server</span>
+              </div>
+              <div class="summary-item">
+                <span class="mono">GET /json/v1/branches.json</span>
+                <span class="v muted">releases and targets</span>
+              </div>
+              <div class="summary-item">
+                <span class="mono">GET /api/v1/revision/{version}/{target}/{subtarget}</span>
+                <span class="v muted">upstream revision</span>
+              </div>
+              <div class="summary-item">
+                <span class="mono">POST /api/v1/build</span>
+                <span class="v muted">request a custom image</span>
+              </div>
+              <div class="summary-item">
+                <span class="mono">GET /api/v1/build/{request_hash}</span>
+                <span class="v muted">build status and result</span>
+              </div>
+              <div class="summary-item">
+                <span class="mono">GET /store/{request_hash}/{image}</span>
+                <span class="v muted">download artifact</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>{{ .SiteName }} · v{{ .Version }} · © {{ .Year }}</span>
+        <div class="footer-links">
+          <a href="/json/v1/overview.json" data-i18n="footer.overview">Server overview</a>
+          {{ if .ServerStats }}<a href="/stats" data-i18n="footer.stats">Statistics</a>{{ end }}
+          <a href="https://github.com/openwrt/asu" target="_blank" rel="noopener" data-i18n="footer.source"
+            >Source code</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script src="/static/js/i18n.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/builder.js"></script>
+  </body>
+</html>

@@ -1,0 +1,100 @@
+# OpenForge configuration
+# Copy to openforge.toml and adjust. Every value can also be supplied through
+# environment variables (see the README).
+
+# Displayed in the header and page titles.
+site_name = "OpenForge"
+# Address the HTTP server binds to.
+listen = ":8080"
+# Administrative contact shown in the API overview.
+contact = ""
+
+# OpenWrt download mirror used for releases, targets, profiles and packages.
+upstream_url = "https://downloads.openwrt.org"
+
+# --- Build backend ----------------------------------------------------------
+# By default OpenForge runs its own ImageBuilder build queue (below).
+# Set backend_url to delegate builds to an external ASU server instead, e.g.
+#   backend_url = "https://sysupgrade.openwrt.org"
+backend_url = ""
+
+# Where generated images and job records are stored.
+public_path = "public"
+
+# ImageBuilder container repository and runtime. container_engine is the engine
+# kind: "auto", "podman" or "docker". The podman/docker commands are used
+# directly; remote operation is selected purely through CONTAINER_HOST /
+# DOCKER_HOST, which container_host maps to. "auto" prefers podman and selects
+# docker when container_host looks like a Docker socket.
+base_container = "ghcr.io/openwrt/imagebuilder"
+container_engine = "auto"
+# container_host = "unix:///run/podman/podman.sock"
+# container_host = "unix:///var/run/docker.sock"
+# container_host = "ssh://user@builder-host/run/user/1000/podman/podman.sock"
+container_network = ""
+# Optional caching proxy that rewrites https:// package downloads, e.g.
+# cache_url = "http://cache"
+cache_url = ""
+# Optional usign/ucert key used to sign generated images. Requires <key>.ucert.
+# build_key_file = "/etc/openforge/key-build"
+
+# Number of parallel build slots and the maximum pending queue length.
+workers = 1
+max_pending_jobs = 200
+
+# Build container timeout and result cache lifetimes ("d" for days is allowed).
+job_timeout = "10m"
+build_ttl = "7d"
+build_ttl_unversioned = "24h"
+build_defaults_ttl = "30m"
+build_failure_ttl = "1h"
+
+# --- Request policy ---------------------------------------------------------
+# Allow users to embed a custom first-boot (UCI defaults) script.
+allow_defaults = false
+# Largest custom root filesystem size accepted, in megabytes.
+max_custom_rootfs_size_mb = 1024
+# Largest custom defaults script accepted, in bytes.
+max_defaults_length = 20480
+
+# URL prefixes permitted for custom apk/opkg repositories. Only repositories
+# whose scheme, host and path prefix match an entry are accepted.
+# repository_allow_list = [
+#   "https://raw.githubusercontent.com/libremesh/",
+#   "https://feed.libremesh.org/",
+# ]
+
+# How long upstream metadata is cached in memory before it is refreshed.
+metadata_ttl = "10m"
+# Timeout for upstream and backend HTTP requests.
+http_timeout = "30s"
+
+# Enable the statistics dashboard and endpoints.
+server_stats = true
+# debug, info, warn or error.
+log_level = "info"
+
+[branches.SNAPSHOT]
+path = "snapshots"
+enabled = true
+snapshot = true
+
+[branches."25.12"]
+path = "releases/{version}"
+enabled = true
+
+[branches."24.10"]
+path = "releases/{version}"
+enabled = true
+
+[branches."23.05"]
+path = "releases/{version}"
+enabled = true
+
+[branches."22.03"]
+path = "releases/{version}"
+enabled = true
+
+[branches."21.02"]
+path = "releases/{version}"
+enabled = false

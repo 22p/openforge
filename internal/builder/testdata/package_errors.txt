@@ -1,0 +1,45 @@
+Note that this docstring is used as the test case, see tests/test_util.py
+
+opkg error formats:
+
+Case opkg-1
+    Collected errors:
+     * opkg_install_cmd: Cannot install package OPKG-MISSING.
+
+Case opkg-2
+    Collected errors:
+     * check_conflicts_for: The following packages conflict with OPKG-CONFLICT-1:
+     * check_conflicts_for:         OPKG-CONFLICT-2 *
+     * opkg_install_cmd: Cannot install package OPKG-CONFLICT-1.
+
+Case opkg-3
+    Collected errors:
+     * check_data_file_clashes: Package OPKG-CONFLICT-3 wants to install file /some/file
+            But that file is already provided by package  * OPKG-CONFLICT-4
+     * opkg_install_cmd: Cannot install package OPKG-CONFLICT-4.
+
+apk error formats:
+
+Case apk-1
+    ERROR: unable to select packages:
+      APK-MISSING (no such package):
+        required by: world[APK-MISSING]
+
+Case apk-2
+   ERROR: unable to select packages:
+      APK-CONFLICT-1:
+        conflicts: APK-CONFLICT-2[nftables=1.1.6-r1]
+        satisfies: world[nftables-json]
+                   blah[nftables]
+      APK-CONFLICT-2:
+        conflicts: APK-CONFLICT-1[nftables=1.1.6-r1]
+        satisfies: world[nftables-nojson]
+
+Case apk-3
+    ERROR: APK-CONFLICT-3: trying to overwrite somefile owned by APK-CONFLICT-4.
+
+Case apk-4 (indentation of this test case is significant)
+ERROR: wget: exited with error 8
+ERROR: WGET-FAIL-1: unexpected end of file
+ERROR: wget: exited with error 3
+ERROR: WGET-FAIL-2: ADB integrity error

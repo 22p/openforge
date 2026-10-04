@@ -1,0 +1,18 @@
+# Build artifacts
+/openforge
+/dist/
+*.exe
+
+# Local state
+/public/
+/events.json
+
+# Local configuration
+/openforge.toml
+*.local.toml
+
+# Logs and editor files
+*.log
+.DS_Store
+.idea/
+.vscode/

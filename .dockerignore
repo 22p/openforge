@@ -1,0 +1,8 @@
+.git
+.gitignore
+docs
+Makefile
+*.md
+openforge.toml
+openforge
+dist
